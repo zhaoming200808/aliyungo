@@ -8,6 +8,7 @@ import (
 	"github.com/denverdino/aliyungo/common"
 	"github.com/golang/protobuf/proto"
 	//"time"
+	//"io/ioutil"
 	"os"
 	"strconv"
 )
@@ -26,6 +27,12 @@ type Client struct {
 
 func (client *Client) SetDebug(debug bool) {
 	client.debug = debug
+}
+
+type ProjectList struct {
+	Projects []Project `json:"projects"`
+	Count    int       `json:"count"`
+	Total    int       `json:"total"`
 }
 
 type Project struct {
@@ -136,6 +143,32 @@ func (client *Client) forProject(name string) *Client {
 	}
 	newclient.endpoint = fmt.Sprintf("%s.%s.%s", name, region, client.endpoint)
 	return &newclient
+}
+
+//获取全部项目
+func (client *Client) ListProject() (ProjectList, error) {
+	req := &request{
+		method: METHOD_GET,
+		path:   "/",
+		params: map[string]string{
+			"offset": "0",
+			"size":   "999",
+		},
+	}
+	var projectList ProjectList
+	if err := client.requestWithJsonResponse(req, &projectList); err != nil {
+		return projectList, err
+	}
+	//	b, err := ioutil.ReadAll(resp.Body)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	var ps []*Project
+	//	if err := json.Unmarshal(b, &ps); err != nil {
+	//		return nil, err
+	//	}
+	//fmt.Printf("body:\n%#v\n", string(b))
+	return projectList, nil
 }
 
 func (client *Client) DeleteProject(name string) error {
